@@ -7,8 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { registerUser } from "@/lib/authClient"
-import { useRouter } from "next/navigation";
+import { registerUser } from "@/lib/authClient";
 
 const getStartedSchema = z.object({
     fullName: z.string().min(1, "Full Name is required"),
@@ -47,29 +46,26 @@ const getErrorMessage = (err: unknown): string => {
     }
 
     if (typeof e.body === "string") return e.body;
-
     if (e.detail) return e.detail;
     if (e.message) return e.message;
-
-    if (e.status) {
-        return `${e.status} ${e.statusText || ""}`.trim();
-    }
+    if (e.status) return `${e.status} ${e.statusText || ""}`.trim();
 
     return "Registration failed";
 };
 
 const GetStarted = () => {
-    const router = useRouter();
-
     const {
         register,
         handleSubmit,
         reset,
+        watch,
         formState: { errors, isValid },
     } = useForm<GetStartedForm>({
         resolver: zodResolver(getStartedSchema),
         mode: "onChange",
     });
+
+    const submittedEmail = watch("nuemail");
 
     const mutation = useMutation({
         mutationFn: async (data: GetStartedForm) => {
@@ -82,7 +78,6 @@ const GetStarted = () => {
         },
         onSuccess: () => {
             reset();
-            router.push("/login");
         },
         onError: (err) => {
             console.error("Registration error", err);
@@ -99,22 +94,50 @@ const GetStarted = () => {
     const getInputClass = (fieldError?: unknown) =>
         `${baseInputClasses} ${fieldError ? "border-red-500" : "border-gray-300"}`;
 
-    const [message, setMessage] = React.useState<string | null>(null);
-    const [isError, setIsError] = React.useState(false);
+    const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
     useEffect(() => {
         if (mutation.isError) {
-            setMessage(getErrorMessage(mutation.error));
-            setIsError(true);
-        } else if (mutation.isSuccess) {
-            const res = mutation.data as { message?: string } | undefined;
-            setMessage(
-                res?.message || "Registration successful. Check your email to verify."
-            );
-            setIsError(false);
+            setErrorMessage(getErrorMessage(mutation.error));
+        } else {
+            setErrorMessage(null);
         }
-    }, [mutation.isError, mutation.isSuccess, mutation.error, mutation.data]);
+    }, [mutation.isError, mutation.error]);
 
+    // ── Success screen ────────────────────────────────────────────────────────
+    if (mutation.isSuccess) {
+        return (
+            <div className="sm:w-2/3 mx-auto space-y-6">
+                <div className="border-2 border-primarypurple/30 bg-primarypurple/5 rounded-xl p-8 flex flex-col items-center text-center gap-4">
+                    <div className="w-16 h-16 rounded-full bg-primarypurple/10 flex items-center justify-center text-4xl">
+                        ✉️
+                    </div>
+                    <h2 className="text-2xl font-black uppercase tracking-tight text-primarypurple">
+                        Check your email!
+                    </h2>
+                    <p className="text-gray-600 text-sm leading-relaxed">
+                        We&apos;ve sent a verification link to{" "}
+                        <span className="font-semibold text-black">{submittedEmail}</span>.
+                        <br />
+                        Click the link in the email to activate your account.
+                    </p>
+                    <p className="text-xs text-gray-400">
+                        The link expires in 24 hours. Didn&apos;t get it? Check your spam folder or{" "}
+                        <Link href="/verify-email/resend" className="text-primarypurple underline font-medium">
+                            resend the email
+                        </Link>
+                        .
+                    </p>
+                    <Link
+                        href="/login"
+                        className="mt-2 bg-primarygreen text-black font-bold px-6 py-2 rounded hover:opacity-90 transition-opacity text-sm uppercase tracking-wide"
+                    >
+                        Go to Login
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="sm:w-2/3 mx-auto space-y-8">
@@ -191,20 +214,15 @@ const GetStarted = () => {
                     <Button
                         className="bg-primarygreen text-black font-bold"
                         type="submit"
-                        isDisabled={!isValid || mutation.isPending || mutation.isSuccess}
+                        isDisabled={!isValid || mutation.isPending}
                     >
                         {mutation.isPending ? "Creating..." : "Create Account"}
                     </Button>
                 </div>
 
-                {message && (
-                    <div
-                        className={`mt-4 p-3 rounded text-sm ${isError
-                            ? "bg-red-100 text-red-700"
-                            : "bg-green-100 text-green-700"
-                            }`}
-                    >
-                        {message}
+                {errorMessage && (
+                    <div className="mt-4 p-3 rounded text-sm bg-red-100 text-red-700">
+                        {errorMessage}
                     </div>
                 )}
             </form>

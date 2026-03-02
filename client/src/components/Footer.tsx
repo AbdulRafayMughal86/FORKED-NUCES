@@ -8,12 +8,11 @@ const Footer = () => {
                 <div className=''>
                     <h2 className='text-lg md:text-xl lg:text-2xl font-bold text-white'>Contact Us</h2>
                     <h3 className='mt-2'>Have recommendations?</h3>
-                    <p>
-                        Contact us at {" "}
-                        <Link href="mailto:k230691@nu.edu.pk" className='hover:text-white/80 duration-200 underline'>k230691@nu.edu.pk</Link>
-                        <Link href="mailto:k230667@nu.edu.pk" className='hover:text-white/80 duration-200 underline'>k230667@nu.edu.pk</Link>
-                        <Link href="mailto:k230544@nu.edu.pk" className='hover:text-white/80 duration-200 underline'>k230544@nu.edu.pk</Link>
-                    </p>
+                    <div className='mt-1 flex flex-col gap-1 text-sm text-white/80'>
+                        <span>Abdullah Azhar Khan — <Link href="mailto:k230691@nu.edu.pk" className='hover:text-white duration-200 underline'>k230691@nu.edu.pk</Link></span>
+                        <span>Abdul Rafay Mughal — <Link href="mailto:k230667@nu.edu.pk" className='hover:text-white duration-200 underline'>k230667@nu.edu.pk</Link></span>
+                        <span>Muhammad Awais — <Link href="mailto:k230544@nu.edu.pk" className='hover:text-white duration-200 underline'>k230544@nu.edu.pk</Link></span>
+                    </div>
                 </div>
                 <div className='text-light text-sm'>
                     © 2026 FORKED NUCES. All rights reserved.

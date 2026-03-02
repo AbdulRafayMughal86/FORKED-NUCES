@@ -146,6 +146,15 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ),
+    # ── Rate limiting ──────────────────────────────────────────────────────────
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",   # unauthenticated users
+        "rest_framework.throttling.UserRateThrottle",   # authenticated users
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "30/minute",    # 30 requests/min for guests (blocks bots/scrapers)
+        "user": "200/minute",   # 200 requests/min for logged-in users
+    },
 }
 
 
@@ -177,3 +186,24 @@ CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(",") if o.strip()
 
 # Allow cookies/auth if needed (adjust in production as required)
 CORS_ALLOW_CREDENTIALS = True
+
+# ── Redis Cache ────────────────────────────────────────────────────────────────
+# Used by DRF throttling (shared across all workers) and general caching.
+# Falls back to in-memory cache if REDIS_URL is not set.
+_redis_url = os.environ.get("REDIS_URL", "")
+if _redis_url:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": _redis_url,
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            },
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        }
+    }

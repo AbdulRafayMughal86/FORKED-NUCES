@@ -11,11 +11,18 @@ services:
     ports:
       - "5432:5432"
 
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+
   backend:
     build: ./server
     restart: always
     depends_on:
       - db
+      - redis
     environment:
       DB_NAME: forked_nuces
       DB_USER: postgres
@@ -32,6 +39,7 @@ services:
       EMAIL_PORT: ${EMAIL_PORT}
       EMAIL_HOST_USER: ${EMAIL_HOST_USER}
       EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+      REDIS_URL: redis://redis:6379/1
     ports:
       - "8000:8000"
     command: >
@@ -40,3 +48,4 @@ services:
 
 volumes:
   postgres_data:
+
